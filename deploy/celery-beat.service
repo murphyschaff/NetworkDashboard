@@ -9,8 +9,7 @@ WorkingDirectory=/opt/network_dashboard
 EnvironmentFile=/opt/network_dashboard/.env
 ExecStart=/opt/network_dashboard/venv/bin/celery \
     -A network_dashboard beat \
-    --loglevel=info \
-    --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    --loglevel=info
 Restart=on-failure
 
 [Install]
