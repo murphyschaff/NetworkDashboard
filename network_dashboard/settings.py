@@ -96,28 +96,30 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
-AUTH_LDAP_SERVER_URI = "ldap://castle.schaff.cc"
+AUTH_LDAP_SERVER_URI = env("LDAP_SERVER_URI")
 AUTH_LDAP_BIND_DN = env("LDAP_BIND_DN")
 AUTH_LDAP_BIND_PASSWORD = env("LDAP_BIND_PASSWORD")
 
+_ldap_base_dn = env("LDAP_BASE_DN")
 AUTH_LDAP_USER_SEARCH = LDAPSearch(
-    "DC=schaff,DC=cc",
+    _ldap_base_dn,
     ldap.SCOPE_SUBTREE,
     "(sAMAccountName=%(user)s)",
 )
 
 AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
-    "DC=schaff,DC=cc",
+    _ldap_base_dn,
     ldap.SCOPE_SUBTREE,
     "(objectClass=group)",
 )
 AUTH_LDAP_GROUP_TYPE = ActiveDirectoryGroupType()
 
-AUTH_LDAP_REQUIRE_GROUP = "CN=Schaff Users,CN=Users,DC=schaff,DC=cc"
+AUTH_LDAP_REQUIRE_GROUP = env("LDAP_REQUIRE_GROUP")
 
+_ldap_admin_group = env("LDAP_ADMIN_GROUP")
 AUTH_LDAP_USER_FLAGS_BY_GROUP = {
-    "is_staff": "CN=Service Admin,CN=Users,DC=schaff,DC=cc",
-    "is_superuser": "CN=Service Admin,CN=Users,DC=schaff,DC=cc",
+    "is_staff": _ldap_admin_group,
+    "is_superuser": _ldap_admin_group,
 }
 
 AUTH_LDAP_USER_ATTR_MAP = {
