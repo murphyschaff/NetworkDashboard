@@ -136,6 +136,10 @@ LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
+# Reverse proxy (Nginx Proxy Manager)
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # Static files
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR("staticfiles")

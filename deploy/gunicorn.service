@@ -9,10 +9,9 @@ WorkingDirectory=/opt/network_dashboard
 EnvironmentFile=/opt/network_dashboard/.env
 ExecStart=/opt/network_dashboard/venv/bin/gunicorn \
     --workers 3 \
-    --bind unix:/run/netmon/gunicorn.sock \
+    --bind 0.0.0.0:8000 \
     network_dashboard.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
-RuntimeDirectory=netmon
 Restart=on-failure
 
 [Install]
