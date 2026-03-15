@@ -1,0 +1,17 @@
+[Unit]
+Description=Network Monitor — Celery Beat Scheduler
+After=network.target redis.service
+
+[Service]
+User=netmon
+Group=netmon
+WorkingDirectory=/opt/network_dashboard
+EnvironmentFile=/opt/network_dashboard/.env
+ExecStart=/opt/network_dashboard/venv/bin/celery \
+    -A network_dashboard beat \
+    --loglevel=info \
+    --scheduler django_celery_beat.schedulers:DatabaseScheduler
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

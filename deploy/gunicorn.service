@@ -1,0 +1,19 @@
+[Unit]
+Description=Network Monitor — Gunicorn
+After=network.target postgresql.service
+
+[Service]
+User=netmon
+Group=netmon
+WorkingDirectory=/opt/network_dashboard
+EnvironmentFile=/opt/network_dashboard/.env
+ExecStart=/opt/network_dashboard/venv/bin/gunicorn \
+    --workers 3 \
+    --bind unix:/run/netmon/gunicorn.sock \
+    network_dashboard.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+RuntimeDirectory=netmon
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

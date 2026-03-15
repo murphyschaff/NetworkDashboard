@@ -1,0 +1,17 @@
+[Unit]
+Description=Network Monitor — Celery Worker
+After=network.target redis.service
+
+[Service]
+User=netmon
+Group=netmon
+WorkingDirectory=/opt/network_dashboard
+EnvironmentFile=/opt/network_dashboard/.env
+ExecStart=/opt/network_dashboard/venv/bin/celery \
+    -A network_dashboard worker \
+    --loglevel=info \
+    --concurrency=4
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

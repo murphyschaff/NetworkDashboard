@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Network Monitor{% endblock %}
+
+{% block extra_head %}
+<meta http-equiv="refresh" content="{{ refresh_seconds }}">
+{% endblock %}
+
+{% block content %}
+
+{# ── Top widget row ───────────────────────────────────────────────── #}
+<div class="row g-3 mb-4">
+
+  {# Weather current #}
+  {% if weather_current %}
+  <div class="col-12 col-md-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="card-subtitle text-muted mb-2"><i class="bi bi-cloud-sun me-1"></i>Current Conditions</h6>
+        <div class="d-flex align-items-center gap-3">
+          {% if weather_current.icon %}
+            <img src="{{ weather_current.icon }}" class="weather-icon" alt="">
+          {% endif %}
+          <div>
+            <div class="fs-3 fw-bold">
+              {% if weather_current.temp_f is not None %}{{ weather_current.temp_f }}&deg;F{% endif %}
+            </div>
+            <div class="text-muted">{{ weather_current.description }}</div>
+          </div>
+        </div>
+        <div class="mt-2 small text-muted">
+          {% if weather_current.humidity is not None %}
+            <i class="bi bi-droplet me-1"></i>{{ weather_current.humidity|floatformat:0 }}% humidity
+          {% endif %}
+          {% if weather_current.wind_mph is not None %}
+            &nbsp;<i class="bi bi-wind me-1"></i>{{ weather_current.wind_mph }} mph
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# Weather forecast #}
+  {% if weather_forecast %}
+  <div class="col-12 col-md-8">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="card-subtitle text-muted mb-2"><i class="bi bi-calendar3 me-1"></i>Forecast</h6>
+        <div class="d-flex flex-wrap gap-3">
+          {% for period in weather_forecast %}
+          <div class="text-center" style="min-width:80px">
+            {% if period.icon %}
+              <img src="{{ period.icon }}" style="width:40px;height:40px" alt="">
+            {% endif %}
+            <div class="small fw-semibold">{{ period.name }}</div>
+            <div class="small">{{ period.temp_f }}&deg;F</div>
+            <div class="text-muted" style="font-size:.7rem">{{ period.short_forecast }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+{# ── Home Assistant widgets ───────────────────────────────────────── #}
+{% if ha_widgets %}
+<div class="row g-3 mb-4">
+  {% for widget in ha_widgets %}
+  <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+    <div class="card ha-widget text-center">
+      <div class="card-body py-2 px-3">
+        <div class="text-muted small">{{ widget.config.friendly_name }}</div>
+        <div class="fs-5 fw-bold">{{ widget.state }} <span class="fs-6 fw-normal text-muted">{{ widget.unit }}</span></div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{# ── Services table ───────────────────────────────────────────────── #}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-hdd-stack me-1"></i>Services</span>
+    <span class="text-muted small" id="last-updated">Auto-refreshes every {{ refresh_seconds }}s</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Host</th>
+          <th>Status</th>
+          <th>Response</th>
+          <th>Last Check</th>
+          <th>Tags</th>
+          <th>Detail</th>
+        </tr>
+      </thead>
+      <tbody
+        id="service-rows"
+        hx-get="{% url 'dashboard_partial' %}"
+        hx-trigger="every {{ refresh_seconds }}s"
+        hx-swap="innerHTML"
+      >
+        {% include "dashboard/partials/service_rows.html" %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

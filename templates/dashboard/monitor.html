@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Monitor — Network Monitor{% endblock %}
+
+{% block content %}
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form id="filter-form" class="row g-2 align-items-end">
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <label class="form-label small text-muted mb-1">Search</label>
+        <input
+          type="text"
+          name="q"
+          class="form-control form-control-sm"
+          placeholder="Name or host..."
+          value="{{ search }}"
+          hx-get="{% url 'monitor_partial' %}"
+          hx-trigger="keyup changed delay:300ms"
+          hx-target="#service-rows"
+          hx-include="#filter-form"
+        >
+      </div>
+      <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+        <label class="form-label small text-muted mb-1">Tag</label>
+        <select
+          name="tag"
+          class="form-select form-select-sm"
+          hx-get="{% url 'monitor_partial' %}"
+          hx-trigger="change"
+          hx-target="#service-rows"
+          hx-include="#filter-form"
+        >
+          <option value="">All tags</option>
+          {% for tag in tags %}
+            <option value="{{ tag.name }}" {% if tag.name == selected_tag %}selected{% endif %}>
+              {{ tag.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+        <label class="form-label small text-muted mb-1">Status</label>
+        <select
+          name="status"
+          class="form-select form-select-sm"
+          hx-get="{% url 'monitor_partial' %}"
+          hx-trigger="change"
+          hx-target="#service-rows"
+          hx-include="#filter-form"
+        >
+          <option value="">All</option>
+          <option value="up"   {% if selected_status == "up"   %}selected{% endif %}>Up</option>
+          <option value="down" {% if selected_status == "down" %}selected{% endif %}>Down</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <a href="{% url 'monitor' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-funnel me-1"></i>Filtered Services</span>
+    <span class="text-muted small">Auto-refreshes every {{ refresh_seconds }}s</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Host</th>
+          <th>Status</th>
+          <th>Response</th>
+          <th>Last Check</th>
+          <th>Tags</th>
+          <th>Detail</th>
+        </tr>
+      </thead>
+      <tbody
+        id="service-rows"
+        hx-get="{% url 'monitor_partial' %}?tag={{ selected_tag }}&status={{ selected_status }}&q={{ search }}"
+        hx-trigger="every {{ refresh_seconds }}s"
+        hx-swap="innerHTML"
+      >
+        {% include "dashboard/partials/service_rows.html" with services=services %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // On initial page load, fetch the filtered rows via HTMX
+  document.addEventListener("DOMContentLoaded", function () {
+    htmx.trigger(document.getElementById("service-rows"), "load");
+  });
+</script>
+{% endblock %}
