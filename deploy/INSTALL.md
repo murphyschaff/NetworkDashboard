@@ -6,7 +6,7 @@ Target OS: Ubuntu Server 24.04 LTS
 
 ```bash
 sudo apt update && sudo apt install -y \
-    python3.12 python3.12-venv python3-pip \
+    python python-venv python3-pip \
     postgresql postgresql-contrib \
     redis-server nginx \
     libldap2-dev libsasl2-dev libssl-dev \
@@ -33,7 +33,7 @@ sudo chown -R netmon:netmon /opt/network_dashboard/
 ## 4. Python virtual environment
 
 ```bash
-sudo -u netmon python3.12 -m venv /opt/network_dashboard/venv
+sudo -u netmon python3 -m venv /opt/network_dashboard/venv
 sudo -u netmon /opt/network_dashboard/venv/bin/pip install -r /opt/network_dashboard/requirements.txt
 ```
 
