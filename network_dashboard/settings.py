@@ -152,6 +152,20 @@ TIME_ZONE = "America/Chicago"
 USE_I18N = True
 USE_TZ = True
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+    },
+    "loggers": {
+        "django_auth_ldap": {
+            "level": "DEBUG",
+            "handlers": ["console"],
+        },
+    },
+}
+
 # Home Assistant
 HA_BASE_URL = "http://home.s1.schaff.cc:8123"
 HA_TOKEN = env("HA_TOKEN", default="")
