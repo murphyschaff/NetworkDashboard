@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.shortcuts import redirect
+from django.urls import path
 from django.utils.html import format_html
 from solo.admin import SingletonModelAdmin
 
@@ -39,6 +41,17 @@ class HAEntityConfigAdmin(admin.ModelAdmin):
     ordering = ("display_order", "friendly_name")
     actions = ["import_from_ha"]
 
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path("import-from-ha/", self.admin_site.admin_view(self.import_from_ha_view), name="integrations_haentityconfig_import"),
+        ]
+        return custom + urls
+
+    def import_from_ha_view(self, request):
+        self._run_import(request)
+        return redirect("../")
+
     @admin.display(description="Current State")
     def current_state(self, obj):
         states = homeassistant.get_cached_states() or {}
@@ -49,6 +62,9 @@ class HAEntityConfigAdmin(admin.ModelAdmin):
 
     @admin.action(description="Import / sync entities from Home Assistant")
     def import_from_ha(self, request, queryset):
+        self._run_import(request)
+
+    def _run_import(self, request):
         all_entities = homeassistant.fetch_all_entity_ids()
         if all_entities is None:
             self.message_user(request, "Could not reach Home Assistant.", level="error")
