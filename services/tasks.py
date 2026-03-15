@@ -1,8 +1,12 @@
+import logging
+
 from celery import shared_task
 from django.utils import timezone
 
 from .checks import check_tcp, check_http
 from .models import Service, ServiceStatus
+
+logger = logging.getLogger("services.checks")
 
 
 @shared_task
@@ -12,10 +16,18 @@ def check_service(service_id: int) -> dict:
     except Service.DoesNotExist:
         return {"error": f"Service {service_id} not found"}
 
+    previous = service.statuses.order_by("-checked_at").first()
+
     if service.check_type == Service.CHECK_TCP:
         is_up, ms, detail = check_tcp(service.host, service.port)
     else:
         is_up, ms, detail = check_http(service.resolved_http_url)
+
+    if previous is None or previous.is_up != is_up:
+        if is_up:
+            logger.info("RECOVERY %s is UP (was down) — %s", service.name, detail or "ok")
+        else:
+            logger.warning("DOWN %s is DOWN — %s", service.name, detail or "no detail")
 
     ServiceStatus.objects.create(
         service=service,

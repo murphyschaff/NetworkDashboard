@@ -158,11 +158,27 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {
         "console": {"class": "logging.StreamHandler"},
+        "syslog": {
+            "class": "logging.handlers.SysLogHandler",
+            "address": "/dev/log",
+            "facility": "local0",
+            "formatter": "syslog",
+        },
+    },
+    "formatters": {
+        "syslog": {
+            "format": "network-dashboard: %(message)s",
+        },
     },
     "loggers": {
         "django_auth_ldap": {
-            "level": "DEBUG",
+            "level": "WARNING",
             "handlers": ["console"],
+        },
+        "services.checks": {
+            "level": "INFO",
+            "handlers": ["syslog"],
+            "propagate": False,
         },
     },
 }
