@@ -97,7 +97,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 AUTH_LDAP_SERVER_URI = "ldap://castle.schaff.cc"
-AUTH_LDAP_BIND_DN = "CN=svc_network-monitor-t0,CN=Users,DC=schaff,DC=cc"
+AUTH_LDAP_BIND_DN = env("LDAP_BIND_DN")
 AUTH_LDAP_BIND_PASSWORD = env("LDAP_BIND_PASSWORD")
 
 AUTH_LDAP_USER_SEARCH = LDAPSearch(
