@@ -18,4 +18,4 @@ def refresh_ha_states():
 @shared_task
 def refresh_librenms_data():
     from . import librenms
-    librenms.refresh_cache()
+    librenms.refresh_all_metrics()

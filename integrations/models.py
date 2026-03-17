@@ -37,6 +37,26 @@ class LibreNMSInstance(models.Model):
         verbose_name_plural = "LibreNMS Instances"
 
 
+class LibreNMSDevice(models.Model):
+    instance = models.ForeignKey(LibreNMSInstance, on_delete=models.CASCADE, related_name="devices")
+    device_id = models.PositiveIntegerField()
+    hostname = models.CharField(max_length=255)
+    display_name = models.CharField(max_length=255, blank=True)
+    cpu = models.FloatField(null=True, blank=True)
+    memory = models.FloatField(null=True, blank=True)
+    storage = models.FloatField(null=True, blank=True)
+    metrics_updated_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.instance.name} — {self.display_name or self.hostname}"
+
+    class Meta:
+        unique_together = [("instance", "device_id")]
+        ordering = ["hostname"]
+        verbose_name = "LibreNMS Device"
+        verbose_name_plural = "LibreNMS Devices"
+
+
 class HAEntityConfig(models.Model):
     entity_id = models.CharField(max_length=255, unique=True)
     friendly_name = models.CharField(max_length=255, blank=True)

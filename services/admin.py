@@ -37,7 +37,7 @@ class ServiceAdmin(admin.ModelAdmin):
             "fields": ("host", "port", "check_type", "http_url"),
         }),
         ("LibreNMS", {
-            "fields": ("librenms_instance", "librenms_device_id"),
+            "fields": ("librenms_device",),
             "classes": ("collapse",),
         }),
     ]

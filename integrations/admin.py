@@ -4,7 +4,7 @@ from django.urls import path
 from django.utils.html import format_html
 from solo.admin import SingletonModelAdmin
 
-from .models import HAEntityConfig, LibreNMSInstance, SiteSettings
+from .models import HAEntityConfig, LibreNMSDevice, LibreNMSInstance, SiteSettings
 from . import homeassistant
 
 
@@ -12,6 +12,23 @@ from . import homeassistant
 class LibreNMSInstanceAdmin(admin.ModelAdmin):
     list_display = ("name", "base_url")
     fields = ("name", "base_url", "api_token")
+    actions = ["import_devices"]
+
+    @admin.action(description="Import / sync devices from LibreNMS")
+    def import_devices(self, request, queryset):
+        from . import librenms
+        total = 0
+        for instance in queryset:
+            total += librenms.import_devices(instance)
+        self.message_user(request, f"Imported/updated {total} device(s).")
+
+
+@admin.register(LibreNMSDevice)
+class LibreNMSDeviceAdmin(admin.ModelAdmin):
+    list_display = ("hostname", "display_name", "instance", "cpu", "memory", "storage", "metrics_updated_at")
+    list_filter = ("instance",)
+    search_fields = ("hostname", "display_name")
+    readonly_fields = ("instance", "device_id", "hostname", "display_name", "cpu", "memory", "storage", "metrics_updated_at")
 
 
 @admin.register(SiteSettings)

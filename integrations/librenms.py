@@ -2,19 +2,16 @@
 import logging
 
 import requests
-from django.core.cache import cache
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
-
-CACHE_KEY = "librenms_devices"
-CACHE_TIMEOUT = 360  # 6 minutes
 
 
 def _headers(instance) -> dict:
     return {"X-Auth-Token": instance.api_token}
 
 
-def fetch_device(device_id: int, instance) -> dict | None:
+def fetch_device_metrics(device_id: int, instance) -> dict | None:
     """Fetch CPU, memory, and storage for a single device. Returns None on error."""
     base = instance.base_url.rstrip("/")
     try:
@@ -28,7 +25,7 @@ def fetch_device(device_id: int, instance) -> dict | None:
         cpu = device.get("cpu") or 0.0
         memory = device.get("memperc") or 0.0
     except Exception as exc:
-        logger.error("LibreNMS(%s) fetch_device(%s) failed: %s", instance.name, device_id, exc)
+        logger.error("LibreNMS(%s) fetch_device_metrics(%s) failed: %s", instance.name, device_id, exc)
         return None
 
     try:
@@ -41,42 +38,59 @@ def fetch_device(device_id: int, instance) -> dict | None:
         mounts = r.json().get("storage", [])
         storage = max((m.get("storage_perc", 0) or 0 for m in mounts), default=0.0)
     except Exception as exc:
-        logger.error("LibreNMS(%s) fetch_device(%s) storage failed: %s", instance.name, device_id, exc)
+        logger.error("LibreNMS(%s) fetch_device_metrics(%s) storage failed: %s", instance.name, device_id, exc)
         storage = 0.0
 
     return {"cpu": float(cpu), "memory": float(memory), "storage": float(storage)}
 
 
-def refresh_cache():
-    """Fetch metrics for all services that have a LibreNMS instance + device ID set.
+def import_devices(instance) -> int:
+    """Fetch all devices from LibreNMS and upsert them into LibreNMSDevice.
 
-    Cache structure: {instance_pk: {device_id: {cpu, memory, storage}}}
+    Returns the count of devices created or updated.
     """
-    from services.models import Service
+    from .models import LibreNMSDevice
 
-    services = (
-        Service.objects
-        .filter(librenms_instance__isnull=False, librenms_device_id__isnull=False)
-        .select_related("librenms_instance")
-    )
+    base = instance.base_url.rstrip("/")
+    try:
+        r = requests.get(
+            f"{base}/api/v0/devices",
+            headers=_headers(instance),
+            timeout=15,
+        )
+        r.raise_for_status()
+        devices = r.json().get("devices", [])
+    except Exception as exc:
+        logger.error("LibreNMS(%s) import_devices failed: %s", instance.name, exc)
+        return 0
 
-    # Group unique (instance, device_id) pairs
-    to_fetch: dict[int, tuple] = {}  # instance_pk -> instance object
-    pairs: set[tuple[int, int]] = set()
-    for svc in services:
-        pairs.add((svc.librenms_instance_id, svc.librenms_device_id))
-        to_fetch[svc.librenms_instance_id] = svc.librenms_instance
+    count = 0
+    for d in devices:
+        device_id = d.get("device_id")
+        if device_id is None:
+            continue
+        LibreNMSDevice.objects.update_or_create(
+            instance=instance,
+            device_id=device_id,
+            defaults={
+                "hostname": d.get("hostname", ""),
+                "display_name": d.get("display_name") or d.get("sysName") or "",
+            },
+        )
+        count += 1
+    return count
 
-    data: dict[int, dict[int, dict]] = {}
-    for instance_pk, device_id in pairs:
-        instance = to_fetch[instance_pk]
-        result = fetch_device(device_id, instance)
+
+def refresh_all_metrics():
+    """Fetch and save metrics for every LibreNMSDevice."""
+    from .models import LibreNMSDevice
+
+    devices = LibreNMSDevice.objects.select_related("instance").all()
+    for device in devices:
+        result = fetch_device_metrics(device.device_id, device.instance)
         if result is not None:
-            data.setdefault(instance_pk, {})[device_id] = result
-
-    cache.set(CACHE_KEY, data, timeout=CACHE_TIMEOUT)
-
-
-def get_cached_data() -> dict:
-    """Returns {instance_pk: {device_id: {cpu, memory, storage}}}."""
-    return cache.get(CACHE_KEY) or {}
+            device.cpu = result["cpu"]
+            device.memory = result["memory"]
+            device.storage = result["storage"]
+            device.metrics_updated_at = timezone.now()
+            device.save(update_fields=["cpu", "memory", "storage", "metrics_updated_at"])
