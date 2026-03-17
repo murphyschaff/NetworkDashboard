@@ -78,10 +78,8 @@ def import_devices(instance) -> int:
         LibreNMSDevice.objects.update_or_create(
             instance=instance,
             device_id=device_id,
-            defaults={
-                "hostname": d.get("hostname", ""),
-                "display_name": d.get("display_name") or d.get("sysName") or "",
-            },
+            defaults={"hostname": d.get("hostname", "")},
+            create_defaults={"display_name": d.get("display") or d.get("sysName") or d.get("hostname", "")},
         )
         count += 1
     return count
