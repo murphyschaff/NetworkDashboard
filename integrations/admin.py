@@ -26,6 +26,7 @@ class LibreNMSInstanceAdmin(admin.ModelAdmin):
 @admin.register(LibreNMSDevice)
 class LibreNMSDeviceAdmin(admin.ModelAdmin):
     list_display = ("hostname", "display_name", "instance", "cpu", "memory", "storage", "metrics_updated_at")
+    list_editable = ("display_name",)
     list_filter = ("instance",)
     search_fields = ("hostname", "display_name")
     readonly_fields = ("instance", "device_id", "hostname", "cpu", "memory", "storage", "metrics_updated_at")
