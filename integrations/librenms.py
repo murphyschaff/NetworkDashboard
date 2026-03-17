@@ -2,7 +2,10 @@
 import logging
 
 import requests
+import urllib3
 from django.utils import timezone
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +22,7 @@ def fetch_device_metrics(device_id: int, instance) -> dict | None:
             f"{base}/api/v0/devices/{device_id}",
             headers=_headers(instance),
             timeout=10,
+            verify=False,
         )
         r.raise_for_status()
         device = r.json().get("devices", [{}])[0]
@@ -33,6 +37,7 @@ def fetch_device_metrics(device_id: int, instance) -> dict | None:
             f"{base}/api/v0/devices/{device_id}/storage",
             headers=_headers(instance),
             timeout=10,
+            verify=False,
         )
         r.raise_for_status()
         mounts = r.json().get("storage", [])
@@ -57,6 +62,7 @@ def import_devices(instance) -> int:
             f"{base}/api/v0/devices",
             headers=_headers(instance),
             timeout=15,
+            verify=False,
         )
         r.raise_for_status()
         devices = r.json().get("devices", [])
