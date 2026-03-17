@@ -4,8 +4,14 @@ from django.urls import path
 from django.utils.html import format_html
 from solo.admin import SingletonModelAdmin
 
-from .models import HAEntityConfig, SiteSettings
+from .models import HAEntityConfig, LibreNMSInstance, SiteSettings
 from . import homeassistant
+
+
+@admin.register(LibreNMSInstance)
+class LibreNMSInstanceAdmin(admin.ModelAdmin):
+    list_display = ("name", "base_url")
+    fields = ("name", "base_url", "api_token")
 
 
 @admin.register(SiteSettings)

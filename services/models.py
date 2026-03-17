@@ -33,6 +33,16 @@ class Service(models.Model):
     tags = models.ManyToManyField(Tag, blank=True)
     enabled = models.BooleanField(default=True)
     display_order = models.PositiveIntegerField(default=0, help_text="Lower numbers appear first")
+    librenms_device_id = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text="LibreNMS device ID to pull CPU/memory/storage from"
+    )
+    librenms_instance = models.ForeignKey(
+        "integrations.LibreNMSInstance",
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        help_text="Which LibreNMS instance this device belongs to"
+    )
 
     def __str__(self):
         return self.name

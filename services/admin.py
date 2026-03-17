@@ -29,6 +29,18 @@ class ServiceAdmin(admin.ModelAdmin):
     filter_horizontal = ("tags",)
     inlines = [ServiceStatusInline]
     actions = ["run_check_now"]
+    fieldsets = [
+        (None, {
+            "fields": ("name", "description", "enabled", "display_order", "tags"),
+        }),
+        ("Check Configuration", {
+            "fields": ("host", "port", "check_type", "http_url"),
+        }),
+        ("LibreNMS", {
+            "fields": ("librenms_instance", "librenms_device_id"),
+            "classes": ("collapse",),
+        }),
+    ]
 
     @admin.display(description="Status")
     def current_status(self, obj):

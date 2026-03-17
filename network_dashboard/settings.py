@@ -87,6 +87,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "integrations.tasks.refresh_ha_states",
         "schedule": 60.0,  # every 60 seconds
     },
+    "refresh-librenms": {
+        "task": "integrations.tasks.refresh_librenms_data",
+        "schedule": 300.0,  # every 5 minutes
+    },
 }
 CELERY_TIMEZONE = "America/Chicago"
 

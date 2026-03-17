@@ -24,6 +24,19 @@ class SiteSettings(SingletonModel):
         verbose_name = "Site Settings"
 
 
+class LibreNMSInstance(models.Model):
+    name = models.CharField(max_length=100, unique=True, help_text="Display name, e.g. 'Production' or 'Lab'")
+    base_url = models.CharField(max_length=255, help_text="e.g. https://librenms.schaff.cc")
+    api_token = models.CharField(max_length=255, help_text="LibreNMS API token (X-Auth-Token)")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "LibreNMS Instance"
+        verbose_name_plural = "LibreNMS Instances"
+
+
 class HAEntityConfig(models.Model):
     entity_id = models.CharField(max_length=255, unique=True)
     friendly_name = models.CharField(max_length=255, blank=True)

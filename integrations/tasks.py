@@ -13,3 +13,9 @@ def refresh_weather():
 def refresh_ha_states():
     from .homeassistant import refresh_cache
     refresh_cache()
+
+
+@shared_task
+def refresh_librenms_data():
+    from . import librenms
+    librenms.refresh_cache()

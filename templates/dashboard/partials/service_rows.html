@@ -1,7 +1,30 @@
 {% for item in services %}
 {% with svc=item.service latest=item.latest %}
 <tr>
-  <td class="fw-semibold">{{ svc.name }}</td>
+  <td class="fw-semibold">
+    {{ svc.name }}
+    {% if item.librenms %}
+      {% with lnms=item.librenms %}
+      <div class="d-flex gap-2 mt-1 flex-wrap">
+        {% with val=lnms.cpu %}
+        <span class="badge {% if val >= 90 %}bg-danger{% elif val >= 70 %}bg-warning text-dark{% else %}bg-success{% endif %} font-monospace small">
+          CPU&nbsp;{{ val|floatformat:0 }}%
+        </span>
+        {% endwith %}
+        {% with val=lnms.memory %}
+        <span class="badge {% if val >= 90 %}bg-danger{% elif val >= 70 %}bg-warning text-dark{% else %}bg-success{% endif %} font-monospace small">
+          MEM&nbsp;{{ val|floatformat:0 }}%
+        </span>
+        {% endwith %}
+        {% with val=lnms.storage %}
+        <span class="badge {% if val >= 90 %}bg-danger{% elif val >= 70 %}bg-warning text-dark{% else %}bg-success{% endif %} font-monospace small">
+          DISK&nbsp;{{ val|floatformat:0 }}%
+        </span>
+        {% endwith %}
+      </div>
+      {% endwith %}
+    {% endif %}
+  </td>
   <td class="text-muted small">{{ svc.host }}:{{ svc.port }}</td>
   <td>
     {% if latest %}
