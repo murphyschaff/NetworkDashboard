@@ -11,7 +11,14 @@ from . import homeassistant
 @admin.register(LibreNMSInstance)
 class LibreNMSInstanceAdmin(admin.ModelAdmin):
     list_display = ("name", "base_url")
-    fields = ("name", "base_url", "api_token")
+    fieldsets = (
+        (None, {"fields": ("name", "base_url", "api_token")}),
+        ("Direct Database Access (for CPU/memory metrics)", {
+            "fields": ("db_host", "db_port", "db_name", "db_user", "db_password"),
+            "classes": ("collapse",),
+            "description": "Optional. Connect directly to the LibreNMS MySQL database to retrieve CPU and memory metrics.",
+        }),
+    )
     actions = ["import_devices"]
 
     @admin.action(description="Import / sync devices from LibreNMS")

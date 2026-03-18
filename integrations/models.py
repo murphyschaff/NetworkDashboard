@@ -28,6 +28,11 @@ class LibreNMSInstance(models.Model):
     name = models.CharField(max_length=100, unique=True, help_text="Display name, e.g. 'Production' or 'Lab'")
     base_url = models.CharField(max_length=255, help_text="e.g. https://librenms.schaff.cc")
     api_token = models.CharField(max_length=255, help_text="LibreNMS API token (X-Auth-Token)")
+    db_host = models.CharField(max_length=255, blank=True, help_text="LibreNMS MySQL host (leave blank to skip direct DB metrics)")
+    db_port = models.PositiveIntegerField(default=3306)
+    db_name = models.CharField(max_length=100, default="librenms")
+    db_user = models.CharField(max_length=100, blank=True)
+    db_password = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return self.name
