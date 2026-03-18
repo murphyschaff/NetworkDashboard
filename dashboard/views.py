@@ -8,6 +8,7 @@ from integrations.models import HAEntityConfig
 
 
 def _service_data():
+    """Flat service list used by the monitor page."""
     services = Service.objects.prefetch_related("tags", "statuses").select_related("librenms_device").filter(enabled=True)
     result = []
     for svc in services:
@@ -19,6 +20,42 @@ def _service_data():
             "librenms": svc.librenms_device,
         })
     return result
+
+
+def _dashboard_service_data():
+    """Device-grouped service data used by the main dashboard."""
+    services = (
+        Service.objects
+        .prefetch_related("tags", "statuses")
+        .select_related("librenms_device")
+        .filter(enabled=True)
+        .order_by("display_order", "name")
+    )
+
+    device_groups = {}
+    unlinked = []
+
+    for svc in services:
+        latest = svc.statuses.order_by("-checked_at").first()
+        svc_data = {
+            "service": svc,
+            "latest": latest,
+            "tags": list(svc.tags.values_list("name", flat=True)),
+        }
+        if svc.librenms_device_id:
+            dev = svc.librenms_device
+            if dev.id not in device_groups:
+                device_groups[dev.id] = {"device": dev, "services": []}
+            device_groups[dev.id]["services"].append(svc_data)
+        else:
+            unlinked.append(svc_data)
+
+    sorted_groups = sorted(
+        device_groups.values(),
+        key=lambda x: (x["device"].display_name or x["device"].hostname).lower(),
+    )
+
+    return {"device_groups": sorted_groups, "unlinked_services": unlinked}
 
 
 def _widget_data():
@@ -42,7 +79,7 @@ def _widget_data():
 @login_required
 def dashboard(request):
     ctx = {
-        "services": _service_data(),
+        **_dashboard_service_data(),
         **_widget_data(),
         "refresh_seconds": 60,
     }
@@ -51,9 +88,9 @@ def dashboard(request):
 
 @login_required
 def dashboard_partial(request):
-    """HTMX partial — returns only the service table rows."""
-    ctx = {"services": _service_data()}
-    return render(request, "dashboard/partials/service_rows.html", ctx)
+    """HTMX partial — returns device-grouped service cards."""
+    ctx = _dashboard_service_data()
+    return render(request, "dashboard/partials/device_groups.html", ctx)
 
 
 @login_required

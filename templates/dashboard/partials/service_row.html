@@ -1,0 +1,40 @@
+{% with svc=item.service latest=item.latest %}
+<tr>
+  <td class="fw-semibold">{{ svc.name }}</td>
+  <td class="text-muted small">{{ svc.host }}:{{ svc.port }}</td>
+  <td>
+    {% if latest %}
+      {% if latest.is_up %}
+        <span class="badge badge-up text-dark">
+          <i class="bi bi-check-circle-fill me-1"></i>UP
+        </span>
+      {% else %}
+        <span class="badge badge-down">
+          <i class="bi bi-x-circle-fill me-1"></i>DOWN
+        </span>
+      {% endif %}
+      {% if latest.detail|slice:":4" == "SSL:" %}
+        <span class="badge bg-warning text-dark ms-1" title="{{ latest.detail }}">
+          <i class="bi bi-shield-exclamation me-1"></i>{{ latest.detail }}
+        </span>
+      {% endif %}
+    {% else %}
+      <span class="badge bg-secondary">Unknown</span>
+    {% endif %}
+  </td>
+  <td class="text-muted small">
+    {% if latest and latest.response_time_ms %}{{ latest.response_time_ms|floatformat:0 }} ms{% else %}—{% endif %}
+  </td>
+  <td class="text-muted small">
+    {% if latest %}{{ latest.checked_at|timesince }} ago{% else %}Never{% endif %}
+  </td>
+  <td>
+    {% for tag in item.tags %}
+      <span class="badge bg-secondary me-1">{{ tag }}</span>
+    {% endfor %}
+  </td>
+  <td class="text-muted small">
+    {% if latest.detail|slice:":4" != "SSL:" %}{{ latest.detail|default:"" }}{% endif %}
+  </td>
+</tr>
+{% endwith %}

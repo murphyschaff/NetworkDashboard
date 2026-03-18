@@ -1,0 +1,87 @@
+{% for group in device_groups %}
+{% with device=group.device %}
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span class="fw-semibold"><i class="bi bi-server me-2"></i>{{ device.display_name|default:device.hostname }}</span>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+      {% if device.cpu is not None %}
+        {% with val=device.cpu %}
+        <span class="badge {% if val >= 90 %}bg-danger{% elif val >= 70 %}bg-warning text-dark{% else %}bg-success{% endif %} font-monospace">
+          CPU&nbsp;{{ val|floatformat:0 }}%
+        </span>
+        {% endwith %}
+      {% endif %}
+      {% if device.memory is not None %}
+        {% with val=device.memory %}
+        <span class="badge {% if val >= 90 %}bg-danger{% elif val >= 70 %}bg-warning text-dark{% else %}bg-success{% endif %} font-monospace">
+          MEM&nbsp;{{ val|floatformat:0 }}%
+        </span>
+        {% endwith %}
+      {% endif %}
+      {% if device.storage is not None %}
+        {% with val=device.storage %}
+        <span class="badge {% if val >= 90 %}bg-danger{% elif val >= 70 %}bg-warning text-dark{% else %}bg-success{% endif %} font-monospace">
+          DISK&nbsp;{{ val|floatformat:0 }}%
+        </span>
+        {% endwith %}
+      {% endif %}
+      {% if device.metrics_updated_at %}
+        <span class="text-muted small">updated {{ device.metrics_updated_at|timesince }} ago</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Host</th>
+          <th>Status</th>
+          <th>Response</th>
+          <th>Last Check</th>
+          <th>Tags</th>
+          <th>Detail</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in group.services %}
+          {% include "dashboard/partials/service_row.html" %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endwith %}
+{% endfor %}
+
+{% if unlinked_services %}
+<div class="card mb-3">
+  <div class="card-header">
+    <span><i class="bi bi-hdd me-2"></i>Other Services</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Host</th>
+          <th>Status</th>
+          <th>Response</th>
+          <th>Last Check</th>
+          <th>Tags</th>
+          <th>Detail</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in unlinked_services %}
+          {% include "dashboard/partials/service_row.html" %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% if not device_groups and not unlinked_services %}
+<div class="text-center text-muted py-5">No services configured.</div>
+{% endif %}

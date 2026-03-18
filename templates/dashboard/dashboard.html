@@ -81,35 +81,18 @@
 </div>
 {% endif %}
 
-{# ── Services table ───────────────────────────────────────────────── #}
-<div class="card">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <span><i class="bi bi-hdd-stack me-1"></i>Services</span>
-    <span class="text-muted small" id="last-updated">Auto-refreshes every {{ refresh_seconds }}s</span>
-  </div>
-  <div class="table-responsive">
-    <table class="table table-hover mb-0">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Host</th>
-          <th>Status</th>
-          <th>Response</th>
-          <th>Last Check</th>
-          <th>Tags</th>
-          <th>Detail</th>
-        </tr>
-      </thead>
-      <tbody
-        id="service-rows"
-        hx-get="{% url 'dashboard_partial' %}"
-        hx-trigger="every {{ refresh_seconds }}s"
-        hx-swap="innerHTML"
-      >
-        {% include "dashboard/partials/service_rows.html" %}
-      </tbody>
-    </table>
-  </div>
+{# ── Services ─────────────────────────────────────────────────────── #}
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <span class="text-muted small"><i class="bi bi-hdd-stack me-1"></i>Services</span>
+  <span class="text-muted small">Auto-refreshes every {{ refresh_seconds }}s</span>
+</div>
+<div
+  id="service-groups"
+  hx-get="{% url 'dashboard_partial' %}"
+  hx-trigger="every {{ refresh_seconds }}s"
+  hx-swap="innerHTML"
+>
+  {% include "dashboard/partials/device_groups.html" %}
 </div>
 
 {% endblock %}
