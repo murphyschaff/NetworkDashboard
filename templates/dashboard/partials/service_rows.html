@@ -57,7 +57,7 @@
       <span class="badge bg-secondary me-1">{{ tag }}</span>
     {% endfor %}
   </td>
-  <td class="text-muted small">{{ latest.detail|default:"" }}</td>
+  <td class="text-muted small cell-detail" title="{{ latest.detail|default:'' }}">{{ latest.detail|default:"" }}</td>
 </tr>
 {% endwith %}
 {% empty %}
