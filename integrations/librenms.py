@@ -14,6 +14,29 @@ def _headers(instance) -> dict:
     return {"X-Auth-Token": instance.api_token}
 
 
+def test_connection(instance) -> tuple[bool, str]:
+    """Hit /api/v0/system to verify the URL and token are valid."""
+    base = instance.base_url.rstrip("/")
+    try:
+        r = requests.get(
+            f"{base}/api/v0/system",
+            headers=_headers(instance),
+            timeout=10,
+            verify=False,
+        )
+        r.raise_for_status()
+        version = r.json().get("system", {}).get("local_ver", "unknown")
+        return True, f"Connected — LibreNMS {version}"
+    except requests.exceptions.ConnectionError as exc:
+        return False, f"Connection error: {exc}"
+    except requests.exceptions.Timeout:
+        return False, "Request timed out"
+    except requests.exceptions.HTTPError as exc:
+        return False, f"HTTP {exc.response.status_code}: {exc.response.text[:300]}"
+    except Exception as exc:
+        return False, str(exc)
+
+
 def fetch_device_metrics(device_id: int, instance) -> dict | None:
     """Fetch CPU, memory, and storage for a single device.
 
@@ -107,9 +130,13 @@ def import_devices(instance) -> int:
         )
         r.raise_for_status()
         devices = r.json().get("devices", [])
+    except requests.exceptions.HTTPError as exc:
+        msg = f"HTTP {exc.response.status_code}: {exc.response.text[:300]}"
+        logger.error("LibreNMS(%s) import_devices failed: %s", instance.name, msg)
+        raise RuntimeError(msg) from exc
     except Exception as exc:
         logger.error("LibreNMS(%s) import_devices failed: %s", instance.name, exc)
-        return 0
+        raise RuntimeError(str(exc)) from exc
 
     count = 0
     for d in devices:

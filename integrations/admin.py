@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.shortcuts import redirect
 from django.urls import path
 from django.utils.html import format_html
@@ -19,15 +19,25 @@ class LibreNMSInstanceAdmin(admin.ModelAdmin):
             "description": "Optional. Connect directly to the LibreNMS MySQL database to retrieve CPU and memory metrics.",
         }),
     )
-    actions = ["import_devices"]
+    actions = ["test_connection", "import_devices"]
+
+    @admin.action(description="Test connection to LibreNMS")
+    def test_connection(self, request, queryset):
+        from . import librenms
+        for instance in queryset:
+            success, msg = librenms.test_connection(instance)
+            level = messages.SUCCESS if success else messages.ERROR
+            self.message_user(request, f"{instance.name}: {msg}", level=level)
 
     @admin.action(description="Import / sync devices from LibreNMS")
     def import_devices(self, request, queryset):
         from . import librenms
-        total = 0
         for instance in queryset:
-            total += librenms.import_devices(instance)
-        self.message_user(request, f"Imported/updated {total} device(s).")
+            try:
+                count = librenms.import_devices(instance)
+                self.message_user(request, f"{instance.name}: imported/updated {count} device(s).")
+            except Exception as exc:
+                self.message_user(request, f"{instance.name}: {exc}", level=messages.ERROR)
 
 
 @admin.register(LibreNMSDevice)
