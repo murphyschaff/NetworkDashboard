@@ -25,7 +25,8 @@ def test_connection(instance) -> tuple[bool, str]:
             verify=False,
         )
         r.raise_for_status()
-        version = r.json().get("system", {}).get("local_ver", "unknown")
+        data = r.json()
+        version = data.get("system", {}).get("local_ver", "unknown") if isinstance(data, dict) else "unknown"
         return True, f"Connected — LibreNMS {version}"
     except requests.exceptions.ConnectionError as exc:
         return False, f"Connection error: {exc}"
